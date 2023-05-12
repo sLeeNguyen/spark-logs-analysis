@@ -1,0 +1,11 @@
+.ipynb_checkpoints
+.vscode
+checkpoints
+elasticsearch-hadoop-8.7.1/dist/*
+!elasticsearch-hadoop-8.7.1/dist/elasticsearch-spark-30_2.12-8.7.1.jar
+!elasticsearch-hadoop-8.7.1/dist/elasticsearch-hadoop-8.7.1.jar
+parsed_logs
+venv
+.env
+data
+.DS_Store

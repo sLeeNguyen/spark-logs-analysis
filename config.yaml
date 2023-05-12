@@ -1,0 +1,14 @@
+es:
+    username: "elastic"
+    password: "es_bigdataproject"
+    host: "https://localhost"
+    port: "9200"
+
+spark:
+    master: "local[*]"
+    appName: "logs-analysis-structure-streaming"
+    checkpoint: "checkpoints"
+    dataSource: "org.elasticsearch.spark.sql"
+    outputMode: "append"
+    esIndex: "spark_logs_analysis"
+    esDocType: "log"
