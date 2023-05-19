@@ -58,15 +58,20 @@ log_pattern = f'{re_host}\s-\s-\s{re_time}\s{re_method_uri_protocol}{re_status}{
 def main():
     args = parse_arguments()
     conf = get_spark_config()
-    spark: SparkSession = SparkSession.builder.config(conf=conf).getOrCreate()
+    spark: SparkSession = SparkSession.builder \
+        .config(conf=conf) \
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0") \
+        .getOrCreate()
     sc = spark.sparkContext
     sc.setLogLevel("WARN")
 
-    raw_logs_df = spark.readStream \
-        .format("socket") \
-        .option("host", args.host) \
-        .option("port", args.port) \
+    raw_logs_df = (
+        spark.readStream.format("kafka")
+        .option("kafka.bootstrap.servers", "localhost:9092")
+        .option("subscribe", "messages")
+        .option("startingOffsets", "earliest")
         .load()
+    )
 
     parsed_logs_df = raw_logs_df.select(
         F.regexp_extract('value', re_host, 1).alias('host'),
@@ -77,7 +82,7 @@ def main():
         F.regexp_extract('value', re_status, 1).alias('status'),
         F.regexp_extract('value', re_content_size, 1).alias('content_size'),
     )
-    # parsed_logs_df.cache()
+
     normalized_logs_df = parsed_logs_df.filter(
         (F.col('host') != '') & F.col('host').isNotNull() &
         (F.col('timestamp') != '') & F.col('timestamp').isNotNull() &
@@ -93,13 +98,22 @@ def main():
         "content_size": F.udf(lambda s: int(s), SparkTypes.IntegerType())('content_size')
     })
 
-    normalized_logs_df.writeStream \
+    normalized_logs_df.printSchema()
+    final_data = normalized_logs_df.writeStream \
         .option("checkpointLocation", settings.CHECKPOINT_LOCATION) \
         .option("es.resource", f'{settings.ES_INDEX}/{settings.ES_DOC_TYPE}') \
         .outputMode(settings.OUTPUT_MODE) \
         .format(settings.DATA_SOURCE) \
-        .start(f'{settings.ES_INDEX}') \
-        .awaitTermination()
+        .start(f'{settings.ES_INDEX}')
+    final_data.awaitTermination()
+
+    # normalized_logs_df.writeStream \
+    #     .option("checkpointLocation", settings.CHECKPOINT_LOCATION) \
+    #     .option("es.resource", f'{settings.ES_INDEX}/{settings.ES_DOC_TYPE}') \
+    #     .outputMode(settings.OUTPUT_MODE) \
+    #     .format(settings.DATA_SOURCE) \
+    #     .start(f'{settings.ES_INDEX}') \
+    #     .awaitTermination()
 
 
 if __name__ == '__main__':
