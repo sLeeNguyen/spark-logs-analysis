@@ -1,14 +1,7 @@
-import json
 import random
+import socket
 import sys
 import time
-
-from kafka import KafkaProducer
-
-
-def serializer(message):
-    return json.dumps(message).encode("utf-8")
-
 
 if __name__ == "__main__":
     args = sys.argv
@@ -17,13 +10,22 @@ if __name__ == "__main__":
         file_path = args[1]
     log_list = open(file_path, "r")
     log_data = log_list.readline()
-    producer = KafkaProducer(bootstrap_servers=["localhost:29092"], value_serializer=serializer)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 9999))
+    s.listen(2)
     while log_data:
+        client, addr = s.accept()
+
         _len = len(log_data)
         if log_data[_len - 1] == "\n":
             log_data = log_data[0:_len - 1]
-        print(log_data)
-        producer.send("messages", log_data)
-        time_to_sleep = random.randint(1, 5)
+
+        print(f"data: {log_data}")
+        msg = bytes(log_data, "utf8")
+        client.sendall(msg)
+
+        time_to_sleep = random.randint(1, 10)
         time.sleep(time_to_sleep)
         log_data = log_list.readline()
+

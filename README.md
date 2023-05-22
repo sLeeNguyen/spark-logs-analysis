@@ -1,6 +1,8 @@
 # Spark Web Logs Analysis
 
-This is an academic project which aim to create a data streaming pipeline using Spark Structured Streaming, Elasticsearch and Kibana. The project uses real-world production logs from NASA then process it using Spark Structured Streaming. The output is stored on Elasticsearch and visualized in a Dashboard using Kibana.
+This is an academic project which aim to create a data streaming pipeline using Spark Structured Streaming,
+Elasticsearch and Kibana. The project uses real-world production logs from NASA then process it using Spark Structured
+Streaming. The output is stored on Elasticsearch and visualized in a Dashboard using Kibana.
 
 **Resources:**
 
@@ -53,7 +55,8 @@ Elasticsearch and Kibana:
 docker-compose -f elasticsearch-kibana-compose.yaml up
 ```
 
-_Note: Elasticsearch node runs on port 9200 (`ES_PORT` in `.env`) (https://localhost:9200), Kibana 5601 (https://localhost:5601) (`KIBANA_PORT` in `.env`)._
+_Note: Elasticsearch node runs on port 9200 (`ES_PORT` in `.env`) (https://localhost:9200), Kibana
+5601 (https://localhost:5601) (`KIBANA_PORT` in `.env`)._
 
 Simulated data server: run Netcat as a data server
 
@@ -68,3 +71,29 @@ Spark:
 ```
 
 Push some logs on data server and see the result on Kibana
+
+## Kafka
+
+This article describes the process try to interact kafka(run by docker) in the project but some problems occur, so we
+still can't run kafka properly
+
+- To run kafka docker
+
+```shell
+docker-compose -f kafka-compose.yaml up -d
+```
+
+- To run simple producer
+
+```shell
+python3 simple-server/__init__py data/NASA_access_log_Aug95
+```
+
+- To run main spark
+
+```shell
+./run_with_kafka.sh
+```
+
+almost them run perfectly, but seemingly we have some trouble with function `withColumns` and `eslasticsearch` is
+incompatible with `kafka`.
