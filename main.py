@@ -88,7 +88,9 @@ def main():
         (F.col('status') != '') & F.col('timestamp').isNotNull() &
         (F.col('content_size') != '') & F.col('timestamp').isNotNull()
     ).withColumns({
-        "timestamp": F.udf(lambda s: datetime.strptime(s, "%d/%b/%Y:%H:%M:%S %z"), SparkTypes.TimestampType())(
+        # "timestamp": F.udf(lambda s: datetime.strptime(s, "%d/%b/%Y:%H:%M:%S %z"), SparkTypes.TimestampType())(
+        #     "timestamp"),
+        "timestamp": F.udf(lambda s: datetime.strptime(s, "%d/%b/%Y:%H:%M:%S %z").strftime("%Y-%m-%dT%H:%M:%S%z"), SparkTypes.StringType())(
             "timestamp"),
         "status": F.udf(lambda s: int(s), SparkTypes.IntegerType())('status'),
         "content_size": F.udf(lambda s: int(s), SparkTypes.IntegerType())('content_size')
@@ -105,7 +107,6 @@ def main():
             query.awaitTermination()
         except StreamingQueryException as error:
             print('Query Exception caught:', error)
-
 
 
 if __name__ == '__main__':
