@@ -6,6 +6,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as SparkTypes
+from pyspark.sql.utils import StreamingQueryException
 
 import settings
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Parse arguments for log anylases',
+        description='Parse arguments for log analysis',
         epilog='End parsing arguments')
     parser.add_argument("--host", type=str, default='localhost',
                         help='Listening for a client at host')
@@ -93,13 +94,18 @@ def main():
         "content_size": F.udf(lambda s: int(s), SparkTypes.IntegerType())('content_size')
     })
 
-    normalized_logs_df.writeStream \
-        .option("checkpointLocation", settings.CHECKPOINT_LOCATION) \
-        .option("es.resource", f'{settings.ES_INDEX}/{settings.ES_DOC_TYPE}') \
-        .outputMode(settings.OUTPUT_MODE) \
-        .format(settings.DATA_SOURCE) \
-        .start(f'{settings.ES_INDEX}') \
-        .awaitTermination()
+    while True:
+        query = normalized_logs_df.writeStream \
+            .option("checkpointLocation", settings.CHECKPOINT_LOCATION) \
+            .option("es.resource", f'{settings.ES_INDEX}/{settings.ES_DOC_TYPE}') \
+            .outputMode(settings.OUTPUT_MODE) \
+            .format(settings.DATA_SOURCE) \
+            .start(f'{settings.ES_INDEX}')
+        try:
+            query.awaitTermination()
+        except StreamingQueryException as error:
+            print('Query Exception caught:', error)
+
 
 
 if __name__ == '__main__':
