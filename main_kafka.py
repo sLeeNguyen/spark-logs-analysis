@@ -107,14 +107,6 @@ def main():
         .start(f'{settings.ES_INDEX}')
     final_data.awaitTermination()
 
-    # normalized_logs_df.writeStream \
-    #     .option("checkpointLocation", settings.CHECKPOINT_LOCATION) \
-    #     .option("es.resource", f'{settings.ES_INDEX}/{settings.ES_DOC_TYPE}') \
-    #     .outputMode(settings.OUTPUT_MODE) \
-    #     .format(settings.DATA_SOURCE) \
-    #     .start(f'{settings.ES_INDEX}') \
-    #     .awaitTermination()
-
 
 if __name__ == '__main__':
     main()
